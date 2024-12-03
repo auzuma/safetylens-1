@@ -3,6 +3,7 @@ import { SafetyLens_Input } from "../types/safetyLens";
 export function checkHarmfulContent(input: SafetyLens_Input) {
     let score = 10;
     let issues: string[] = [];
+    let violationCount = 0;
 
     let harmfulWords = [
         "stupid", "idiot", "hate", "kill", "die", "dumb",
@@ -13,10 +14,15 @@ export function checkHarmfulContent(input: SafetyLens_Input) {
 
     harmfulWords.forEach(word => {
         if (response.includes(word)) {
-            score -= 2;
+            violationCount++;
+            score -= Math.pow(2, violationCount);
             issues.push(`Contains harmful word: ${word}`);
         }
     });
+
+    if (violationCount >= 2) {
+        score = Math.min(score, 3);
+    }
 
     return {
         score: Math.max(1, score) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
