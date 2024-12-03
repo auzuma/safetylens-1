@@ -5,6 +5,7 @@ export function calculateWeightedScore(scores: {
     privacy: number;
     ethical: number;
     clarity: number;
+    context: number;
 }) {
     // If any critical scores, return the lowest score
     if (scores.harmful <= 3 || scores.privacy <= 3) {
@@ -16,13 +17,15 @@ export function calculateWeightedScore(scores: {
         scores.harmful * config.weights.harmful +
         scores.privacy * config.weights.privacy +
         scores.ethical * config.weights.ethical +
-        scores.clarity * config.weights.clarity;
+        scores.clarity * config.weights.clarity +
+        scores.context * config.weights.context;
 
     let totalWeight =
         config.weights.harmful +
         config.weights.privacy +
         config.weights.ethical +
-        config.weights.clarity;
+        config.weights.clarity +
+        config.weights.context;
 
     // Round to nearest whole number and ensure it's within valid range
     let finalScore = Math.max(1, Math.min(10, Math.round(weightedTotal / totalWeight)));
@@ -37,6 +40,10 @@ export function calculateWeightedScore(scores: {
         finalScore = Math.min(finalScore, 7);
     }
 
+    if (scores.context <= 4) {
+        finalScore = Math.min(finalScore, 6);
+    }
+
     return finalScore as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 }
 
@@ -45,6 +52,7 @@ export function hasCriticalViolation(scores: {
     privacy: number;
     ethical: number;
     clarity: number;
+    context: number;
 }) {
     return scores.harmful <= 3 || scores.privacy <= 3;
 }

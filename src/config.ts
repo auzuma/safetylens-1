@@ -16,12 +16,14 @@ export let config = {
     harmful: 3.0,
     privacy: 2.5,
     ethical: 2.0,
-    clarity: 1.5
+    clarity: 1.5,
+    context: 1.8
   },
   minimumScores: {
     harmful: 6,
     privacy: 6,
     ethical: 5,
-    clarity: 4
+    clarity: 4,
+    context: 5
   }
 };
