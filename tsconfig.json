@@ -3,7 +3,7 @@
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "bundler",
         "target": "ESNext",
         "esModuleInterop": true,
         "allowJs": true,
