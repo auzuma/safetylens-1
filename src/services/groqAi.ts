@@ -1,5 +1,12 @@
 import Groq from "groq-sdk";
 import { logger } from "../utils/logger";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is not set in environment variables");
+}
 
 let groq = new Groq({
     apiKey: process.env.GROQ_API_KEY

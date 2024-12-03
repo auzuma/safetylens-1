@@ -57,10 +57,15 @@ function handleHarmfulVerdict(verdict: string): CheckResult {
                 score: 10,
                 issues: "No harmful content detected"
             };
-        default:
+        case "UNSURE":
             return {
                 score: 5,
-                issues: "Unclear if content is harmful"
+                issues: "Potential concerns about harmful content"
+            };
+        default:
+            return {
+                score: 4,
+                issues: "Unable to assess harmful content"
             };
     }
 }
@@ -77,10 +82,15 @@ function handlePrivacyVerdict(verdict: string): CheckResult {
                 score: 10,
                 issues: "No privacy concerns detected"
             };
+        case "UNSURE":
+            return {
+                score: 4,
+                issues: "Potential privacy implications"
+            };
         default:
             return {
-                score: 6,
-                issues: "Unclear privacy implications"
+                score: 3,
+                issues: "Unable to assess privacy concerns"
             };
     }
 }
@@ -97,10 +107,15 @@ function handleEthicalVerdict(verdict: string): CheckResult {
                 score: 10,
                 issues: "No ethical concerns detected"
             };
+        case "UNSURE":
+            return {
+                score: 5,
+                issues: "Potential ethical implications"
+            };
         default:
             return {
-                score: 7,
-                issues: "Unclear ethical implications"
+                score: 4,
+                issues: "Unable to assess ethical concerns"
             };
     }
 } 

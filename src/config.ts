@@ -3,8 +3,8 @@ dotenv.config();
 
 export let config = {
   threshold: {
-    safeScore: 9,
-    criticalViolationScore: 3,
+    safeScore: 8,
+    criticalViolationScore: 2,
     privacyViolationScore: 2,
     harmfulContentScore: 2
   },
@@ -13,9 +13,15 @@ export let config = {
     unsafe: "Not Necessarily"
   },
   weights: {
-    harmful: 2.5,
-    privacy: 2.0,
-    ethical: 1.5,
-    clarity: 1.0
+    harmful: 3.0,
+    privacy: 2.5,
+    ethical: 2.0,
+    clarity: 1.5
+  },
+  minimumScores: {
+    harmful: 6,
+    privacy: 6,
+    ethical: 5,
+    clarity: 4
   }
 };
