@@ -67,23 +67,34 @@ let testCases: { name: string; input: SafetyLens_Input }[] = [
 ];
 
 // Run all test cases
-logger.info("Starting SafetyLens evaluation tests...\n");
+async function runTests() {
+  logger.info("Starting SafetyLens evaluation tests...\n");
 
-testCases.forEach(test => {
-  logger.info(`Testing: ${test.name}`);
-  console.log("Chat Dialog:");
-  test.input.chat_dialog?.forEach(dialog => {
-    console.log(`  ${dialog.role}: ${dialog.content}`);
-  });
-  console.log(`Assistant Response: ${test.input.assistant_resp}\n`);
+  for (let test of testCases) {
+    logger.info(`Testing: ${test.name}`);
+    console.log("Chat Dialog:");
+    test.input.chat_dialog?.forEach(dialog => {
+      console.log(`  ${dialog.role}: ${dialog.content}`);
+    });
+    console.log(`Assistant Response: ${test.input.assistant_resp}\n`);
 
-  let result = evaluateSafety(test.input);
-  console.log({
-    safetyScore: result.safetyScore,
-    isRespSafeOverall: result.isRespSafeOverall,
-    reason: result.reason
-  });
-  console.log("-------------------\n");
+    try {
+      let result = await evaluateSafety(test.input);
+      console.log({
+        safetyScore: result.safetyScore,
+        isRespSafeOverall: result.isRespSafeOverall,
+        reason: result.reason
+      });
+    } catch (error) {
+      logger.error(`Error in test "${test.name}": ${error}`);
+    }
+    console.log("-------------------\n");
+  }
+
+  logger.success("All tests completed!");
+}
+
+runTests().catch(error => {
+  logger.error(`Test suite failed: ${error}`);
+  process.exit(1);
 });
-
-logger.success("All tests completed!");

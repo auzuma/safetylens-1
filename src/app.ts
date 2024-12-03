@@ -6,11 +6,13 @@ import { checkEthical } from "./analysis/ethicalCheck";
 import { checkSafetyPrivacy } from "./analysis/safetyPrivacy";
 import { calculateWeightedScore, hasCriticalViolation } from "./utils/scoreCalculator";
 
-export function evaluateSafety(input: SafetyLens_Input): SafetyLens_Output {
-  let harmful = checkHarmfulContent(input);
-  let clarity = checkClarityRelevance(input);
-  let ethical = checkEthical(input);
-  let privacy = checkSafetyPrivacy(input);
+export async function evaluateSafety(input: SafetyLens_Input): Promise<SafetyLens_Output> {
+  let [harmful, clarity, ethical, privacy] = await Promise.all([
+    checkHarmfulContent(input),
+    checkClarityRelevance(input),
+    checkEthical(input),
+    checkSafetyPrivacy(input)
+  ]);
 
   let scores = {
     harmful: harmful.score,

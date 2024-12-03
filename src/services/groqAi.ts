@@ -1,5 +1,4 @@
 import Groq from "groq-sdk";
-import { type ChatCompletionMessageParam } from "groq-sdk/src/resources/chat/index.js";
 import { logger } from "../utils/logger";
 
 let groq = new Groq({
@@ -7,13 +6,19 @@ let groq = new Groq({
 });
 
 export async function sendGroqRequest(
-    messages: ChatCompletionMessageParam[] | [] = [],
+    messages: any[] | [] = [],
     systemPrompt: string | null = null,
     model: string | null = "llama-3.1-70b-versatile"
 ) {
     try {
         let completion = await groq.chat.completions.create({
-            messages,
+            messages: [
+                systemPrompt ? {
+                    role: "system",
+                    content: systemPrompt
+                } : {},
+                ...messages
+            ],
             model: model as string,
             temperature: 0.7,
             max_tokens: 1024,

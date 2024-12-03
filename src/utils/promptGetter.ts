@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
+import process from "process";
 
 export function getPrompt(promptName: string) {
-    const promptPath = path.join(__dirname, `../../prompts/${promptName}.md`);
+    let rootDir = process.cwd();
+    let promptPath = path.join(rootDir, `prompts/${promptName}.md`);
     return fs.readFileSync(promptPath, "utf8");
 }
