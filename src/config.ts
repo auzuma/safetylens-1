@@ -13,17 +13,19 @@ export let config = {
     unsafe: "Not Necessarily"
   },
   weights: {
-    harmful: 3.0,
-    privacy: 2.5,
-    ethical: 2.0,
-    clarity: 1.5,
-    context: 1.8
+    harmful: 2.5,
+    privacy: 2.0,
+    ethical: 1.5,
+    clarity: 1.0,
+    context: 1.0,
+    factual: 2.0
   },
   minimumScores: {
     harmful: 6,
     privacy: 6,
     ethical: 5,
     clarity: 4,
-    context: 5
+    context: 5,
+    factual: 4
   }
 };

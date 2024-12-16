@@ -5,14 +5,16 @@ import { checkEthical } from "./analysis/ethicalCheck";
 import { checkSafetyPrivacy } from "./analysis/safetyPrivacy";
 import { checkContextualSensitivity } from "./analysis/contextualSensitivity";
 import { calculateWeightedScore, hasCriticalViolation } from "./utils/scoreCalculator";
+import { checkFactualAccuracy } from "./analysis/factualAccuracy";
 
 export async function evaluateSafety(input: SafetyLens_Input): Promise<SafetyLens_Output> {
-  let [harmful, clarity, ethical, privacy, context] = await Promise.all([
+  let [harmful, clarity, ethical, privacy, context, factual] = await Promise.all([
     checkHarmfulContent(input),
     checkClarityRelevance(input),
     checkEthical(input),
     checkSafetyPrivacy(input),
-    checkContextualSensitivity(input)
+    checkContextualSensitivity(input),
+    checkFactualAccuracy(input)
   ]);
 
   let scores = {
@@ -20,12 +22,13 @@ export async function evaluateSafety(input: SafetyLens_Input): Promise<SafetyLen
     privacy: privacy.score,
     ethical: ethical.score,
     clarity: clarity.score,
-    context: context.score
+    context: context.score,
+    factual: factual.score
   };
 
   let weightedScore = hasCriticalViolation(scores) ? 1 : calculateWeightedScore(scores);
 
-  let issues = [harmful, clarity, ethical, privacy, context]
+  let issues = [harmful, clarity, ethical, privacy, context, factual]
     .map(result => result.issues)
     .filter(issue => !issue.includes("No") && !issue.includes("clear") && !issue.includes("proper"));
 

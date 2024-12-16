@@ -10,7 +10,7 @@ type CheckResult = {
 
 export async function aiBasedCheck(
     input: SafetyLens_Input,
-    checkType: "harmful" | "privacy" | "ethical"
+    checkType: "harmful" | "privacy" | "ethical" | "factual"
 ): Promise<CheckResult> {
     try {
         let userMessage = input.chat_dialog?.[0]?.content || "";
@@ -41,6 +41,8 @@ export async function aiBasedCheck(
                 return handlePrivacyVerdict(verdict);
             case "ethical":
                 return handleEthicalVerdict(verdict);
+            case "factual":
+                return handleFactualVerdict(verdict);
             default:
                 throw new SafetyLensError(
                     "Unknown check type",
@@ -136,6 +138,31 @@ function handleEthicalVerdict(verdict: string): CheckResult {
             return {
                 score: 4,
                 issues: "Unable to assess ethical concerns"
+            };
+    }
+}
+
+function handleFactualVerdict(verdict: string): CheckResult {
+    switch (verdict) {
+        case "SUSPICIOUS":
+            return {
+                score: 3,
+                issues: "Contains suspicious or unverifiable claims"
+            };
+        case "UNCERTAIN":
+            return {
+                score: 6,
+                issues: "Contains claims requiring verification"
+            };
+        case "RELIABLE":
+            return {
+                score: 10,
+                issues: "Claims appear reliable or are common knowledge"
+            };
+        default:
+            return {
+                score: 5,
+                issues: "Unable to assess factual accuracy"
             };
     }
 } 
