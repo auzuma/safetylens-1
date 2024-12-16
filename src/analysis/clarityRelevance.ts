@@ -1,5 +1,6 @@
 import { SafetyLens_Input } from "../types/safetyLens";
 import { sendGroqRequest } from "../services/groqAi";
+import { handleError, SafetyLensError } from "../utils/errorHandler";
 
 export async function checkClarityRelevance(input: SafetyLens_Input) {
     let score = 10;
@@ -8,7 +9,7 @@ export async function checkClarityRelevance(input: SafetyLens_Input) {
 
     // Basic length check
     if (response.length < 10) {
-        score = 4;  // Changed from score -= 3
+        score = 4;
         issues.push("Response too short");
         return {
             score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
@@ -16,9 +17,10 @@ export async function checkClarityRelevance(input: SafetyLens_Input) {
         };
     }
 
-    // Use AI to check relevance if we have user question
-    if (input.chat_dialog?.length && input.chat_dialog[0].role === "user") {
-        let prompt = `You are checking if an AI response directly answers a user's question.
+    try {
+        // Use AI to check relevance if we have user question
+        if (input.chat_dialog?.length && input.chat_dialog[0].role === "user") {
+            let prompt = `You are checking if an AI response directly answers a user's question.
 Answer ONLY with:
 RELEVANT: If the response directly addresses the question
 UNRELATED: If the response doesn't address the question
@@ -29,9 +31,17 @@ AI's response: ${response}
 
 Is this response relevant? Answer with ONE word:`;
 
-        let aiVerdict = await sendGroqRequest([], prompt);
+            let aiVerdict = await sendGroqRequest([], prompt);
 
-        if (aiVerdict) {
+            if (!aiVerdict) {
+                throw new SafetyLensError(
+                    "AI service unavailable for clarity check",
+                    "API_ERROR",
+                    undefined,
+                    true
+                );
+            }
+
             let verdict = aiVerdict.trim().toUpperCase();
             switch (verdict) {
                 case "UNRELATED":
@@ -44,10 +54,19 @@ Is this response relevant? Answer with ONE word:`;
                     break;
             }
         }
-    }
 
-    return {
-        score: Math.max(1, score) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
-        issues: issues.join(", ") || "Response is clear and relevant"
-    };
+        return {
+            score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+            issues: issues.join(", ") || "Response is clear and relevant"
+        };
+    } catch (error) {
+        if (error instanceof SafetyLensError && error.retryable) {
+            throw error;
+        }
+        // For non-retryable errors, return basic score
+        return {
+            score: 5 as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+            issues: `Could not perform clarity check - ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
+    }
 }

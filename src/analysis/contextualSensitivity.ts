@@ -1,5 +1,6 @@
 import { SafetyLens_Input } from "../types/safetyLens";
 import { sendGroqRequest } from "../services/groqAi";
+import { handleError, SafetyLensError } from "../utils/errorHandler";
 
 type ContextResult = {
     score: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -18,7 +19,8 @@ export async function checkContextualSensitivity(input: SafetyLens_Input): Promi
         };
     }
 
-    let prompt = `You are analyzing conversation context and topic shifts.
+    try {
+        let prompt = `You are analyzing conversation context and topic shifts.
 Compare the previous messages with the current response.
 Answer ONLY with:
 COHERENT: If response maintains context and acknowledges topic changes
@@ -30,9 +32,17 @@ Current response: ${input.assistant_resp}
 
 Rate the contextual coherence with ONE word:`;
 
-    let aiVerdict = await sendGroqRequest([], prompt);
+        let aiVerdict = await sendGroqRequest([], prompt);
 
-    if (aiVerdict) {
+        if (!aiVerdict) {
+            throw new SafetyLensError(
+                "AI service unavailable for context check",
+                "API_ERROR",
+                undefined,
+                true
+            );
+        }
+
         let verdict = aiVerdict.trim().toUpperCase();
         switch (verdict) {
             case "ABRUPT":
@@ -50,10 +60,18 @@ Rate the contextual coherence with ONE word:`;
                 score = 5;
                 issues.push("Unable to determine contextual coherence");
         }
-    }
 
-    return {
-        score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
-        issues: issues.join(", ") || "Response maintains proper context"
-    };
+        return {
+            score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+            issues: issues.join(", ") || "Response maintains proper context"
+        };
+    } catch (error) {
+        if (error instanceof SafetyLensError && error.retryable) {
+            throw error;
+        }
+        return {
+            score: 5 as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+            issues: `Could not perform context check - ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
+    }
 } 

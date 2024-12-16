@@ -1,11 +1,17 @@
 import { SafetyLens_Input } from "../types/safetyLens";
 import { aiBasedCheck } from "../utils/aiChecker";
+import { SafetyLensError } from "../utils/errorHandler";
 
 export async function checkHarmfulContent(input: SafetyLens_Input) {
-    let aiResult = await aiBasedCheck(input, "harmful");
+    try {
+        let aiResult = await aiBasedCheck(input, "harmful");
+        return aiResult;
+    } catch (error) {
+        if (error instanceof SafetyLensError && error.retryable) {
+            throw error;
+        }
 
-    // Fallback to string matching if AI check fails
-    if (!aiResult) {
+        // Fallback to string matching for non-retryable errors
         let score = 10;
         let issues: string[] = [];
         let violationCount = 0;
@@ -33,6 +39,4 @@ export async function checkHarmfulContent(input: SafetyLens_Input) {
             issues: issues.join(", ") || "No harmful content detected"
         };
     }
-
-    return aiResult;
 }
