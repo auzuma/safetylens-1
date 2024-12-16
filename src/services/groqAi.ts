@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
 import { logger } from "../utils/logger";
 import { rateLimiter } from "./rateLimiter";
+import { handleError, SafetyLensError } from "../utils/errorHandler";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -37,14 +38,18 @@ export async function sendGroqRequest(
                 stream: false
             });
 
-            return completion.choices[0]?.message?.content || null;
-        } catch (error: any) {
-            if (error?.message?.includes('rate_limit_exceeded')) {
-                logger.warn(`Rate limit exceeded for request ${requestId}`);
-                throw error;
+            if (!completion.choices?.[0]?.message?.content) {
+                throw new SafetyLensError(
+                    "Empty response from Groq API",
+                    "API_ERROR",
+                    requestId,
+                    true
+                );
             }
-            logger.error(`Error in Groq API request ${requestId}: ${error}`);
-            return null;
+
+            return completion.choices[0].message.content;
+        } catch (error: any) {
+            throw handleError(error, `Groq API request ${requestId}`);
         }
     }, requestId);
 }
