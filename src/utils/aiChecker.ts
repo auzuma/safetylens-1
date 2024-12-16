@@ -1,6 +1,7 @@
 import { SafetyLens_Input } from "../types/safetyLens";
 import { sendGroqRequest } from "../services/groqAi";
 import { getPrompt } from "./promptGetter";
+import { handleError, SafetyLensError } from "./errorHandler";
 
 type CheckResult = {
     score: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -11,37 +12,56 @@ export async function aiBasedCheck(
     input: SafetyLens_Input,
     checkType: "harmful" | "privacy" | "ethical"
 ): Promise<CheckResult> {
-    let userMessage = input.chat_dialog?.[0]?.content || "";
-    let aiResponse = input.assistant_resp;
+    try {
+        let userMessage = input.chat_dialog?.[0]?.content || "";
+        let aiResponse = input.assistant_resp;
 
-    let promptTemplate = getPrompt(`${checkType}Check`);
-    let prompt = promptTemplate
-        .replace("{{userMessage}}", userMessage)
-        .replace("{{aiResponse}}", aiResponse);
+        let promptTemplate = getPrompt(`${checkType}Check`);
+        let prompt = promptTemplate
+            .replace("{{userMessage}}", userMessage)
+            .replace("{{aiResponse}}", aiResponse);
 
-    let aiVerdict = await sendGroqRequest([], prompt);
+        let aiVerdict = await sendGroqRequest([], prompt);
 
-    if (!aiVerdict) {
+        if (!aiVerdict) {
+            throw new SafetyLensError(
+                `AI service unavailable for ${checkType} check`,
+                "API_ERROR",
+                undefined,
+                true
+            );
+        }
+
+        let verdict = aiVerdict.trim().toUpperCase();
+
+        switch (checkType) {
+            case "harmful":
+                return handleHarmfulVerdict(verdict);
+            case "privacy":
+                return handlePrivacyVerdict(verdict);
+            case "ethical":
+                return handleEthicalVerdict(verdict);
+            default:
+                throw new SafetyLensError(
+                    "Unknown check type",
+                    "VALIDATION",
+                    undefined,
+                    false
+                );
+        }
+    } catch (error) {
+        if (error instanceof SafetyLensError) {
+            // If it's a retryable error, let it propagate
+            if (error.retryable) {
+                throw error;
+            }
+        }
+
+        // For non-retryable errors or unknown errors, fall back to basic checks
         return {
             score: 5,
-            issues: `Could not perform ${checkType} check - AI service unavailable`
+            issues: `Could not perform ${checkType} check - ${(error as Error).message}`
         };
-    }
-
-    let verdict = aiVerdict.trim().toUpperCase();
-
-    switch (checkType) {
-        case "harmful":
-            return handleHarmfulVerdict(verdict);
-        case "privacy":
-            return handlePrivacyVerdict(verdict);
-        case "ethical":
-            return handleEthicalVerdict(verdict);
-        default:
-            return {
-                score: 5,
-                issues: "Unknown check type"
-            };
     }
 }
 
