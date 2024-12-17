@@ -13,13 +13,20 @@ export async function aiBasedCheck(
     checkType: "harmful" | "privacy" | "ethical" | "factual"
 ): Promise<CheckResult> {
     try {
-        let userMessage = input.chat_dialog?.[0]?.content || "";
-        let aiResponse = input.assistant_resp;
+        let userMessage = "";
+        if (input.chat_dialog) {
+            for (let i = input.chat_dialog.length - 1; i >= 0; i--) {
+                if (input.chat_dialog[i].role === "user") {
+                    userMessage = input.chat_dialog[i].content;
+                    break;
+                }
+            }
+        }
 
         let promptTemplate = getPrompt(`${checkType}Check`);
         let prompt = promptTemplate
             .replace("{{userMessage}}", userMessage)
-            .replace("{{aiResponse}}", aiResponse);
+            .replace("{{aiResponse}}", input.assistant_resp);
 
         let aiVerdict = await sendGroqRequest([], prompt);
 

@@ -7,14 +7,23 @@ export async function checkClarityRelevance(input: SafetyLens_Input) {
     let issues = [];
     let response = input.assistant_resp;
 
-    // Basic length check
+    // Basic length check with context awareness
     if (response.length < 10) {
-        score = 4;
-        issues.push("Response too short");
-        return {
-            score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
-            issues: issues.join(", ")
-        };
+        // Check if it's a simple question that can have a short answer
+        let userQuestion = input.chat_dialog?.[0]?.content?.toLowerCase() || "";
+        let isSimpleQuestion = userQuestion.includes("what is") ||
+            userQuestion.includes("how many") ||
+            userQuestion.includes("what's") ||
+            /\d[\s+\-*/]\d/.test(userQuestion);
+
+        if (!isSimpleQuestion) {
+            score = 4;
+            issues.push("Response too short");
+            return {
+                score: score as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10,
+                issues: issues.join(", ")
+            };
+        }
     }
 
     try {
