@@ -4,14 +4,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --loader ts-node/esm src/index.ts",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "start:server": "node --loader ts-node/esm src/server.ts",
+    "dev:server": "nodemon --exec node --loader ts-node/esm src/server.ts"
   },
   "type": "module",
   "dependencies": {
     "@types/chalk": "^2.2.4",
+    "@types/cors": "^2.8.17",
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.0",
     "chalk": "^5.3.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "groq-sdk": "^0.8.0",
