@@ -74,7 +74,7 @@ app.post("/api/safety-check/batch", async (req: any, res: any) => {
     }
 });
 
-let PORT = process.env.PORT || 3000;
+let PORT = process.env.PORT || 9000;
 
 app.listen(PORT, () => {
     logger.success(`SafetyLens API server running on port ${PORT}`);
