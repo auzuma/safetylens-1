@@ -10,11 +10,14 @@ app.use(cors());
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
+    logger.info(`Received health check request`);
     res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Main safety check endpoint
 app.post("/api/safety-check", async (req: any, res: any) => {
+    logger.info(`Received request for a new safety check`);
+
     try {
         let input: SafetyLens_Input = req.body;
 
@@ -40,6 +43,7 @@ app.post("/api/safety-check", async (req: any, res: any) => {
 
 // Batch safety check endpoint
 app.post("/api/safety-check/batch", async (req: any, res: any) => {
+    logger.info(`Received request for a batch safety check`);
     try {
         let inputs: SafetyLens_Input[] = req.body;
 
@@ -76,6 +80,6 @@ app.post("/api/safety-check/batch", async (req: any, res: any) => {
 
 let PORT = process.env.PORT || 9000;
 
-app.listen(PORT, () => {
+app.listen(PORT as number, "localhost", () => {
     logger.success(`SafetyLens API server running on port ${PORT}`);
 }); 
