@@ -28,49 +28,53 @@ export async function aiBasedCheck(
             .replace("{{userMessage}}", userMessage)
             .replace("{{aiResponse}}", input.assistant_resp);
 
-        let aiVerdict = await sendGroqRequest([], prompt);
+        try {
+            let aiVerdict = await sendGroqRequest([], prompt);
+            if (!aiVerdict) {
+                throw new SafetyLensError(
+                    "AI service returned empty response",
+                    "API_ERROR",
+                    undefined,
+                    true
+                );
+            }
 
-        if (!aiVerdict) {
+            let verdict = aiVerdict.trim().toUpperCase();
+            switch (checkType) {
+                case "harmful":
+                    return handleHarmfulVerdict(verdict);
+                case "privacy":
+                    return handlePrivacyVerdict(verdict);
+                case "ethical":
+                    return handleEthicalVerdict(verdict);
+                case "factual":
+                    return handleFactualVerdict(verdict);
+                default:
+                    throw new SafetyLensError(
+                        "Unknown check type",
+                        "VALIDATION",
+                        undefined,
+                        true
+                    );
+            }
+        } catch (apiError) {
             throw new SafetyLensError(
-                `AI service unavailable for ${checkType} check`,
+                `AI service error: ${(apiError as Error).message}`,
                 "API_ERROR",
                 undefined,
                 true
             );
         }
-
-        let verdict = aiVerdict.trim().toUpperCase();
-
-        switch (checkType) {
-            case "harmful":
-                return handleHarmfulVerdict(verdict);
-            case "privacy":
-                return handlePrivacyVerdict(verdict);
-            case "ethical":
-                return handleEthicalVerdict(verdict);
-            case "factual":
-                return handleFactualVerdict(verdict);
-            default:
-                throw new SafetyLensError(
-                    "Unknown check type",
-                    "VALIDATION",
-                    undefined,
-                    false
-                );
-        }
     } catch (error) {
-        if (error instanceof SafetyLensError) {
-            // If it's a retryable error, let it propagate
-            if (error.retryable) {
-                throw error;
-            }
+        if (error instanceof SafetyLensError && error.retryable) {
+            throw error;
         }
-
-        // For non-retryable errors or unknown errors, fall back to basic checks
-        return {
-            score: 5,
-            issues: `Could not perform ${checkType} check - ${(error as Error).message}`
-        };
+        throw new SafetyLensError(
+            `AI check failed - ${(error as Error).message}`,
+            "API_ERROR",
+            undefined,
+            true
+        );
     }
 }
 

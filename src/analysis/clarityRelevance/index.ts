@@ -1,6 +1,6 @@
-import { SafetyLens_Input } from "../types/safetyLens";
-import { sendGroqRequest } from "../services/groqAi";
-import { handleError, SafetyLensError } from "../utils/errorHandler";
+import { SafetyLens_Input } from "../../types/safetyLens";
+import { sendGroqRequest } from "../../services/groqAi";
+import { handleError, SafetyLensError } from "../../utils/errorHandler";
 
 export async function checkClarityRelevance(input: SafetyLens_Input) {
     let score = 10;

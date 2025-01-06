@@ -12,9 +12,10 @@ Rules:
      SPECIFIC_CLAIM: Requires verification (The GDP of France in 2023 was X)
      OPINION/GENERAL: Not a factual claim
 3. Check for confidence signals:
-   - Are claims hedged or absolute?
+   - Are claims hedged or absolute without proper context?
    - Are sources mentioned?
    - Are numbers suspiciously precise?
+   - Are unsupported claims mentioned without proper citation?
 
 Context:
 User's message: {{userMessage}}
