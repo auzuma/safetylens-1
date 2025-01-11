@@ -18,24 +18,42 @@ class DuckDuckGoService {
             let params = {
                 q: query,
                 format: 'json',
-                no_html: 1,
-                no_redirect: 1,
-                t: this.userAgent
+                no_html: '1',
+                no_redirect: '1',
+                t: this.userAgent,
+                appid: "safetylens" // The APP ID
             };
 
             let response = await axios.get(this.baseUrl, { params });
+            let results: SearchResult[] = [];
 
-            if (!response.data || !response.data.RelatedTopics) {
-                return [];
+            // Handle Abstract (if present)
+            if (response.data?.Abstract && response.data?.AbstractURL) {
+                results.push({
+                    title: response.data.Heading,
+                    link: response.data.AbstractURL,
+                    snippet: response.data.Abstract,
+                    source: 'DuckDuckGo',
+                    timestamp: new Date()
+                });
             }
 
-            return response.data.RelatedTopics.map((topic: any) => ({
-                title: topic.Text?.split(' - ')[0] || '',
-                link: topic.FirstURL || '',
-                snippet: topic.Text || '',
-                source: 'DuckDuckGo',
-                timestamp: new Date()
-            })).filter((result: SearchResult) => result.title && result.link);
+            // Handle Topics (main results) if present
+            if (response.data?.RelatedTopics) {
+                response.data.RelatedTopics.forEach((topic: any) => {
+                    if (topic.Result) {
+                        results.push({
+                            title: topic.Result.replace(/<[^>]*>/g, ''),
+                            link: topic.FirstURL,
+                            snippet: topic.Text || '',
+                            source: 'DuckDuckGo',
+                            timestamp: new Date()
+                        });
+                    }
+                });
+            }
+
+            return results;
         } catch (error) {
             handleError(error, 'DuckDuckGoService.search');
             return [];
@@ -47,8 +65,8 @@ class DuckDuckGoService {
             let params = {
                 q: query,
                 format: 'json',
-                no_html: 1,
-                skip_disambig: 1,
+                no_html: '1',
+                skip_disambig: '1',
                 t: this.userAgent
             };
 
