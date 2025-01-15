@@ -6,7 +6,8 @@
     "start": "node --loader ts-node/esm src/index.ts",
     "dev": "nodemon",
     "start:server": "node --loader ts-node/esm src/server.ts",
-    "dev:server": "nodemon --exec node --loader ts-node/esm src/server.ts"
+    "dev:server": "nodemon --exec node --loader ts-node/esm src/server.ts",
+    "test:real-ai-gen": "node --loader ts-node/esm src/real_ai_gen_tests/index.ts"
   },
   "type": "module",
   "dependencies": {
