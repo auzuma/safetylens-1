@@ -17,7 +17,7 @@ let groq = new Groq({
 export async function sendGroqRequest(
     messages: any[] | [] = [],
     systemPrompt: string | null = null,
-    model: string | null = "llama-3.1-70b-versatile"
+    model: string | null = "llama-3.3-70b-versatile"
 ) {
     let requestId = `groq_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
