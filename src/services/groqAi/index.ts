@@ -1,7 +1,7 @@
 import Groq from "groq-sdk";
-import { logger } from "../utils/logger";
-import { rateLimiter } from "./rateLimiter";
-import { handleError, SafetyLensError } from "../utils/errorHandler";
+import { logger } from "../../utils/logger";
+import { rateLimiter } from "../rateLimiter";
+import { handleError, SafetyLensError } from "../../utils/errorHandler";
 import dotenv from "dotenv";
 
 dotenv.config();
