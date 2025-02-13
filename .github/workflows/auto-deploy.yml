@@ -7,6 +7,11 @@ on:
       - development
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,6 +19,7 @@ jobs:
     # Set environment based on branch
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,18 +33,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          destination_dir: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+          path: '.'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
           
       - name: Start server using GitHub Actions
         env:
           PORT: ${{ github.ref == 'refs/heads/main' && '9000' || '9001' }}
         run: |
-          npm run build
           nohup npm run start:server > server.log 2>&1 &
           echo "Server started on port $PORT"
           
