@@ -1,0 +1,48 @@
+name: Auto Deploy SafetyLens
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # Set environment based on branch
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          destination_dir: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+          
+      - name: Start server using GitHub Actions
+        env:
+          PORT: ${{ github.ref == 'refs/heads/main' && '9000' || '9001' }}
+        run: |
+          npm run build
+          nohup npm run start:server > server.log 2>&1 &
+          echo "Server started on port $PORT"
+          
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f http://localhost:${{ github.ref == 'refs/heads/main' && '9000' || '9001' }}/health || exit 1 
