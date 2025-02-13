@@ -54,7 +54,6 @@ jobs:
           cp package*.json dist/
           cp tsconfig.json dist/
           cp nodemon.json dist/
-          cp .env dist/ || true
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -68,26 +67,34 @@ jobs:
       - name: Start server and run health check
         env:
           PORT: ${{ inputs.port }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # Add any other environment variables your app needs
         run: |
           # Modify server.ts to listen on all interfaces
-          sed -i 's/app.listen(PORT as number, "localhost"/app.listen(PORT as number, "0.0.0.0"/' src/server.ts
+          sed -i 's/app\.listen(PORT as number,\s*"localhost"/app.listen(PORT as number, "0.0.0.0"/' src/server.ts || echo "Server binding already configured"
+          
+          echo "Starting server on port ${PORT}..."
           
           # Start server and wait for it to be ready
           npm run start:server &
           SERVER_PID=$!
           
+          echo "Server process started with PID ${SERVER_PID}"
+          
           # Wait for server to start (up to 30 seconds)
           for i in {1..30}; do
-            if curl -s http://localhost:$PORT/health > /dev/null; then
+            if curl -s "http://localhost:${PORT}/health" > /dev/null; then
               echo "Server is up and running!"
               break
             fi
             if [ $i -eq 30 ]; then
               echo "Server failed to start within 30 seconds"
+              cat server.log || true
               exit 1
             fi
+            echo "Attempt $i: Waiting for server to start..."
             sleep 1
           done
           
           # Keep the server running in background
-          disown $SERVER_PID 
+          disown ${SERVER_PID} 
