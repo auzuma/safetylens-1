@@ -65,14 +65,29 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
           
-      - name: Start server using GitHub Actions
+      - name: Start server and run health check
         env:
           PORT: ${{ inputs.port }}
         run: |
-          nohup npm run start:server > server.log 2>&1 &
-          echo "Server started on port $PORT"
+          # Modify server.ts to listen on all interfaces
+          sed -i 's/app.listen(PORT as number, "localhost"/app.listen(PORT as number, "0.0.0.0"/' src/server.ts
           
-      - name: Health check
-        run: |
-          sleep 10
-          curl -f http://localhost:${{ inputs.port }}/health || exit 1 
+          # Start server and wait for it to be ready
+          npm run start:server &
+          SERVER_PID=$!
+          
+          # Wait for server to start (up to 30 seconds)
+          for i in {1..30}; do
+            if curl -s http://localhost:$PORT/health > /dev/null; then
+              echo "Server is up and running!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Server failed to start within 30 seconds"
+              exit 1
+            fi
+            sleep 1
+          done
+          
+          # Keep the server running in background
+          disown $SERVER_PID 
