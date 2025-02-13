@@ -36,10 +36,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
+      - name: Prepare artifact
+        run: |
+          mkdir dist
+          cp -r src/ dist/
+          cp package*.json dist/
+          cp tsconfig.json dist/
+          cp nodemon.json dist/
+          cp .env dist/ || true
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
